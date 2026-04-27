@@ -1,0 +1,49 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+<svg width="1900" height="500" viewBox="0 0 1900 500" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <radialGradient id="ballGrad" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#3a3a3a"></stop>
+      <stop offset="55%" stop-color="#090909"></stop>
+      <stop offset="100%" stop-color="#000000"></stop>
+    </radialGradient>
+
+    <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d7aa72"></stop>
+      <stop offset="60%" stop-color="#c19058"></stop>
+      <stop offset="100%" stop-color="#b47c42"></stop>
+    </linearGradient>
+
+    <linearGradient id="tipGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3e7db8"></stop>
+      <stop offset="100%" stop-color="#1f5b93"></stop>
+    </linearGradient>
+  </defs>
+
+  <rect width="100%" height="100%" fill="white"></rect>
+
+  <!-- Kø -->
+  <rect x="0" y="285" width="300" height="34" fill="url(#woodGrad)"></rect>
+  <rect x="300" y="285" width="36" height="34" fill="#efe9de"></rect>
+  <rect x="336" y="285" width="16" height="34" fill="#111111"></rect>
+
+  <!-- Blå halvmåne-tupp -->
+  <path d="M352 285 L365 285 A17 17 0 0 1 365 319 L352 319 Z" fill="url(#tipGrad)"></path>
+
+  <!-- 8-ball -->
+  <circle cx="520" cy="235" r="120" fill="url(#ballGrad)"></circle>
+
+  <!-- Refleks -->
+  <ellipse cx="445" cy="165" rx="43" ry="20" transform="rotate(-38 445 165)" fill="#ffffff66"></ellipse>
+
+  <!-- Hvit 8-sirkel -->
+  <circle cx="565" cy="220" r="42" fill="white"></circle>
+
+  <text x="565" y="239" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700" text-anchor="middle" fill="black">8</text>
+
+  <!-- Tekst -->
+  <text x="730" y="320" font-family="Georgia, 'Times New Roman', serif" font-size="78" font-weight="700" fill="#111111">
+    TheCueScore.com
+  </text>
+
+</svg>
