@@ -224,3 +224,45 @@ body {
     grid-template-columns: 1fr;
   }
 }
+.dashboard {
+  max-width: 1000px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.dashboard h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.dashboardCard {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+}
+
+.dashboardCard h3 {
+  margin: 0 0 10px;
+  color: #666;
+}
+
+.dashboardCard p {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .dashboardGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

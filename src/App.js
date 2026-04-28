@@ -1,6 +1,16 @@
-import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { auth, db } from "./firebase";
 import "./App.css";
 
@@ -9,38 +19,26 @@ const europeanCountries = [
   { country: "Sweden", code: "+46" },
   { country: "Denmark", code: "+45" },
   { country: "Finland", code: "+358" },
-  { country: "Iceland", code: "+354" },
   { country: "United Kingdom", code: "+44" },
-  { country: "Ireland", code: "+353" },
   { country: "Germany", code: "+49" },
   { country: "France", code: "+33" },
   { country: "Spain", code: "+34" },
-  { country: "Portugal", code: "+351" },
   { country: "Italy", code: "+39" },
   { country: "Netherlands", code: "+31" },
   { country: "Belgium", code: "+32" },
-  { country: "Switzerland", code: "+41" },
-  { country: "Austria", code: "+43" },
   { country: "Poland", code: "+48" },
-  { country: "Czech Republic", code: "+420" },
-  { country: "Slovakia", code: "+421" },
-  { country: "Hungary", code: "+36" },
-  { country: "Romania", code: "+40" },
-  { country: "Bulgaria", code: "+359" },
-  { country: "Greece", code: "+30" },
-  { country: "Croatia", code: "+385" },
-  { country: "Serbia", code: "+381" },
-  { country: "Slovenia", code: "+386" },
-  { country: "Estonia", code: "+372" },
-  { country: "Latvia", code: "+371" },
-  { country: "Lithuania", code: "+370" },
 ];
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCreateAccount, setShowCreateAccount] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+
   const [phoneCode, setPhoneCode] = useState("+47");
   const [loading, setLoading] = useState(false);
+
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -52,11 +50,36 @@ export default function App() {
     club: "",
   });
 
+  const [loginForm, setLoginForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+
+      if (currentUser) {
+        const profileRef = doc(db, "users", currentUser.uid);
+        const profileSnap = await getDoc(profileRef);
+
+        if (profileSnap.exists()) {
+          setProfile(profileSnap.data());
+        }
+      } else {
+        setProfile(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const updateForm = (field, value) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateLoginForm = (field, value) => {
+    setLoginForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleCreateAccount = async (e) => {
@@ -67,12 +90,8 @@ export default function App() {
     if (!form.email.trim()) return alert("Please enter email.");
     if (!form.phoneNumber.trim()) return alert("Please enter phone number.");
     if (!form.club.trim()) return alert("Please enter club.");
-    if (form.password.length < 6) {
-      return alert("Password must be at least 6 characters.");
-    }
-    if (form.password !== form.confirmPassword) {
-      return alert("Passwords do not match.");
-    }
+    if (form.password.length < 6) return alert("Password must be at least 6 characters.");
+    if (form.password !== form.confirmPassword) return alert("Passwords do not match.");
 
     try {
       setLoading(true);
@@ -83,10 +102,10 @@ export default function App() {
         form.password
       );
 
-      const user = userCredential.user;
+      const newUser = userCredential.user;
 
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
+      await setDoc(doc(db, "users", newUser.uid), {
+        uid: newUser.uid,
         fullName: form.fullName.trim(),
         nationality: form.nationality,
         email: form.email.trim().toLowerCase(),
@@ -101,34 +120,43 @@ export default function App() {
         createdAt: serverTimestamp(),
       });
 
-      alert("Account created successfully!");
-
-      setForm({
-        fullName: "",
-        nationality: "",
-        email: "",
-        phoneNumber: "",
-        password: "",
-        confirmPassword: "",
-        club: "",
-      });
-      setPhoneCode("+47");
       setShowCreateAccount(false);
+      alert("Account created successfully!");
     } catch (error) {
       console.error(error);
-
-      if (error.code === "auth/email-already-in-use") {
-        alert("This email is already in use.");
-      } else if (error.code === "auth/invalid-email") {
-        alert("Invalid email address.");
-      } else if (error.code === "auth/weak-password") {
-        alert("Password is too weak.");
-      } else {
-        alert("Could not create account. Check Firebase settings.");
-      }
+      alert("Could not create account.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (!loginForm.email.trim()) return alert("Please enter email.");
+    if (!loginForm.password) return alert("Please enter password.");
+
+    try {
+      setLoading(true);
+
+      await signInWithEmailAndPassword(
+        auth,
+        loginForm.email,
+        loginForm.password
+      );
+
+      setShowLogin(false);
+      setLoginForm({ email: "", password: "" });
+    } catch (error) {
+      console.error(error);
+      alert("Wrong email or password.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
   };
 
   return (
@@ -139,13 +167,28 @@ export default function App() {
         </div>
 
         <div className="authButtons">
-          <button className="loginButton">Log in</button>
-          <button
-            className="createButton"
-            onClick={() => setShowCreateAccount(true)}
-          >
-            Create account
-          </button>
+          {user ? (
+            <>
+              <button className="loginButton">
+                {profile?.fullName || user.email}
+              </button>
+              <button className="createButton" onClick={handleLogout}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="loginButton" onClick={() => setShowLogin(true)}>
+                Log in
+              </button>
+              <button
+                className="createButton"
+                onClick={() => setShowCreateAccount(true)}
+              >
+                Create account
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -157,13 +200,73 @@ export default function App() {
         {menuOpen && (
           <div className="dropdown">
             <a href="#home">Home</a>
+            <a href="#dashboard">Dashboard</a>
             <a href="#ranking">Ranking</a>
             <a href="#tournaments">Tournaments</a>
             <a href="#players">Players</a>
-            <a href="#contact">Contact</a>
           </div>
         )}
       </div>
+
+      {user && profile && (
+        <section id="dashboard" className="dashboard">
+          <h1>Welcome, {profile.fullName}</h1>
+
+          <div className="dashboardGrid">
+            <div className="dashboardCard">
+              <h3>Club</h3>
+              <p>{profile.club}</p>
+            </div>
+
+            <div className="dashboardCard">
+              <h3>Rating</h3>
+              <p>{profile.rating}</p>
+            </div>
+
+            <div className="dashboardCard">
+              <h3>Wins</h3>
+              <p>{profile.wins}</p>
+            </div>
+
+            <div className="dashboardCard">
+              <h3>Losses</h3>
+              <p>{profile.losses}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {showLogin && (
+        <div className="modalOverlay">
+          <div className="modal">
+            <button className="closeButton" onClick={() => setShowLogin(false)}>
+              ×
+            </button>
+
+            <h2>Log in</h2>
+
+            <form className="accountForm" onSubmit={handleLogin}>
+              <input
+                type="email"
+                placeholder="Email"
+                value={loginForm.email}
+                onChange={(e) => updateLoginForm("email", e.target.value)}
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                value={loginForm.password}
+                onChange={(e) => updateLoginForm("password", e.target.value)}
+              />
+
+              <button type="submit" className="submitButton" disabled={loading}>
+                {loading ? "Logging in..." : "Log in"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showCreateAccount && (
         <div className="modalOverlay">
@@ -171,7 +274,6 @@ export default function App() {
             <button
               className="closeButton"
               onClick={() => setShowCreateAccount(false)}
-              disabled={loading}
             >
               ×
             </button>
@@ -206,10 +308,7 @@ export default function App() {
               />
 
               <div className="phoneRow">
-                <select
-                  value={phoneCode}
-                  onChange={(e) => setPhoneCode(e.target.value)}
-                >
+                <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}>
                   {europeanCountries.map((item) => (
                     <option key={item.code} value={item.code}>
                       {item.country} {item.code}
@@ -236,9 +335,7 @@ export default function App() {
                 type="password"
                 placeholder="Confirm password"
                 value={form.confirmPassword}
-                onChange={(e) =>
-                  updateForm("confirmPassword", e.target.value)
-                }
+                onChange={(e) => updateForm("confirmPassword", e.target.value)}
               />
 
               <input
