@@ -1,61 +1,41 @@
 body {
   margin: 0;
   padding: 0;
-  background: white;
+  background: #f5f5f5;
   font-family: Arial, sans-serif;
 }
 
 .page {
   min-height: 100vh;
+  background: #f5f5f5;
 }
 
 .topbar {
+  position: relative;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 30px 40px 0;
-}
-
-.logoContainer {
-  flex: 1;
-}
-
-.logo {
-  width: 100%;
-  max-width: 1350px;
-  height: auto;
-}
-
-.authButtons {
-  display: flex;
-  gap: 14px;
-  padding-top: 20px;
-  margin-left: 20px;
-}
-
-.loginButton,
-.createButton {
-  padding: 12px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.loginButton {
-  border: 1px solid #cfcfcf;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 40px;
   background: white;
 }
 
-.createButton {
-  border: none;
-  background: #111;
-  color: white;
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo {
+  max-width: 900px;
+  width: 100%;
+  height: auto;
 }
 
 .menuSection {
-  position: relative;
-  margin-left: 40px;
-  margin-top: 10px;
+  position: absolute;
+  left: 40px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .menuButton {
@@ -65,6 +45,7 @@ body {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 700;
+  font-size: 15px;
 }
 
 .dropdown {
@@ -85,29 +66,44 @@ body {
   padding: 13px 16px;
   color: black;
   text-decoration: none;
+  font-weight: 500;
 }
 
 .dropdown a:hover {
   background: #f2f2f2;
-}.accountForm select {
-  padding: 13px 14px;
-  border: 1px solid #ccc;
-  border-radius: 9px;
+}
+
+.authButtons {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 12px;
+}
+
+.loginButton,
+.createButton {
+  padding: 12px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
   font-size: 15px;
+}
+
+.loginButton {
+  border: 1px solid #cfcfcf;
   background: white;
+  color: black;
 }
 
-.phoneRow {
-  display: grid;
-  grid-template-columns: 170px 1fr;
-  gap: 10px;
+.createButton {
+  border: none;
+  background: #111;
+  color: white;
 }
 
-.phoneRow input,
-.phoneRow select {
-  width: 100%;
-  box-sizing: border-box;
-}.modalOverlay {
+.modalOverlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
@@ -125,6 +121,11 @@ body {
   border-radius: 16px;
   padding: 30px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.modal h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
 }
 
 .closeButton {
@@ -151,6 +152,7 @@ body {
   border: 1px solid #ccc;
   border-radius: 9px;
   font-size: 15px;
+  background: white;
 }
 
 .phoneRow {
