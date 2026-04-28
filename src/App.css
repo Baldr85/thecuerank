@@ -111,6 +111,7 @@ body {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 16px;
 }
 
 .modal {
@@ -170,4 +171,56 @@ body {
   color: white;
   font-weight: bold;
   cursor: pointer;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    padding: 18px 16px;
+    gap: 14px;
+  }
+
+  .logo {
+    max-width: 100%;
+  }
+
+  .menuSection {
+    position: static;
+    transform: none;
+    margin: 0 16px 12px;
+  }
+
+  .menuButton {
+    width: 100%;
+  }
+
+  .dropdown {
+    position: static;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .authButtons {
+    position: static;
+    transform: none;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .loginButton,
+  .createButton {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .modal {
+    max-width: 100%;
+    padding: 24px;
+  }
+
+  .phoneRow {
+    grid-template-columns: 1fr;
+  }
 }

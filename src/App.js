@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "./firebase";
 import "./App.css";
 
 const europeanCountries = [
@@ -37,6 +40,96 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCreateAccount, setShowCreateAccount] = useState(false);
   const [phoneCode, setPhoneCode] = useState("+47");
+  const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    fullName: "",
+    nationality: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    confirmPassword: "",
+    club: "",
+  });
+
+  const updateForm = (field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+
+    if (!form.fullName.trim()) return alert("Please enter full name.");
+    if (!form.nationality) return alert("Please select nationality.");
+    if (!form.email.trim()) return alert("Please enter email.");
+    if (!form.phoneNumber.trim()) return alert("Please enter phone number.");
+    if (!form.club.trim()) return alert("Please enter club.");
+    if (form.password.length < 6) {
+      return alert("Password must be at least 6 characters.");
+    }
+    if (form.password !== form.confirmPassword) {
+      return alert("Passwords do not match.");
+    }
+
+    try {
+      setLoading(true);
+
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
+
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        fullName: form.fullName.trim(),
+        nationality: form.nationality,
+        email: form.email.trim().toLowerCase(),
+        phoneCode,
+        phoneNumber: form.phoneNumber.trim(),
+        club: form.club.trim(),
+        role: "player",
+        rating: 1000,
+        wins: 0,
+        losses: 0,
+        gamesPlayed: 0,
+        createdAt: serverTimestamp(),
+      });
+
+      alert("Account created successfully!");
+
+      setForm({
+        fullName: "",
+        nationality: "",
+        email: "",
+        phoneNumber: "",
+        password: "",
+        confirmPassword: "",
+        club: "",
+      });
+      setPhoneCode("+47");
+      setShowCreateAccount(false);
+    } catch (error) {
+      console.error(error);
+
+      if (error.code === "auth/email-already-in-use") {
+        alert("This email is already in use.");
+      } else if (error.code === "auth/invalid-email") {
+        alert("Invalid email address.");
+      } else if (error.code === "auth/weak-password") {
+        alert("Password is too weak.");
+      } else {
+        alert("Could not create account. Check Firebase settings.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="page">
@@ -78,16 +171,25 @@ export default function App() {
             <button
               className="closeButton"
               onClick={() => setShowCreateAccount(false)}
+              disabled={loading}
             >
               ×
             </button>
 
             <h2>Create account</h2>
 
-            <form className="accountForm">
-              <input type="text" placeholder="Full name" />
+            <form className="accountForm" onSubmit={handleCreateAccount}>
+              <input
+                type="text"
+                placeholder="Full name"
+                value={form.fullName}
+                onChange={(e) => updateForm("fullName", e.target.value)}
+              />
 
-              <select>
+              <select
+                value={form.nationality}
+                onChange={(e) => updateForm("nationality", e.target.value)}
+              >
                 <option value="">Select nationality</option>
                 {europeanCountries.map((item) => (
                   <option key={item.country} value={item.country}>
@@ -96,7 +198,12 @@ export default function App() {
                 ))}
               </select>
 
-              <input type="email" placeholder="Email" />
+              <input
+                type="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={(e) => updateForm("email", e.target.value)}
+              />
 
               <div className="phoneRow">
                 <select
@@ -110,15 +217,39 @@ export default function App() {
                   ))}
                 </select>
 
-                <input type="tel" placeholder="Phone number" />
+                <input
+                  type="tel"
+                  placeholder="Phone number"
+                  value={form.phoneNumber}
+                  onChange={(e) => updateForm("phoneNumber", e.target.value)}
+                />
               </div>
 
-              <input type="password" placeholder="Password" />
-              <input type="password" placeholder="Confirm password" />
-              <input type="text" placeholder="Club" />
+              <input
+                type="password"
+                placeholder="Password"
+                value={form.password}
+                onChange={(e) => updateForm("password", e.target.value)}
+              />
 
-              <button type="submit" className="submitButton">
-                Create account
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={form.confirmPassword}
+                onChange={(e) =>
+                  updateForm("confirmPassword", e.target.value)
+                }
+              />
+
+              <input
+                type="text"
+                placeholder="Club"
+                value={form.club}
+                onChange={(e) => updateForm("club", e.target.value)}
+              />
+
+              <button type="submit" className="submitButton" disabled={loading}>
+                {loading ? "Creating..." : "Create account"}
               </button>
             </form>
           </div>
