@@ -10,6 +10,9 @@ import {
   setDoc,
   getDoc,
   serverTimestamp,
+  collection,
+  getDocs,
+  addDoc,
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import "./App.css";
@@ -59,6 +62,10 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
 
+  const [clubs, setClubs] = useState([]);
+  const [clubChoice, setClubChoice] = useState("");
+  const [newClubName, setNewClubName] = useState("");
+
   const [form, setForm] = useState({
     fullName: "",
     nationality: "",
@@ -66,7 +73,6 @@ export default function App() {
     phoneNumber: "",
     password: "",
     confirmPassword: "",
-    club: "",
   });
 
   const [loginForm, setLoginForm] = useState({
@@ -74,7 +80,6 @@ export default function App() {
     password: "",
   });
 
-  // Tournament state
   const [tournamentName, setTournamentName] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [tournamentPlayers, setTournamentPlayers] = useState([]);
@@ -100,6 +105,21 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const loadClubs = async () => {
+      const snapshot = await getDocs(collection(db, "clubs"));
+      const clubList = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+      clubList.sort((a, b) => a.name.localeCompare(b.name));
+      setClubs(clubList);
+    };
+
+    loadClubs();
+  }, []);
+
   const updateForm = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -115,12 +135,49 @@ export default function App() {
     if (!form.nationality) return alert("Please select nationality.");
     if (!form.email.trim()) return alert("Please enter email.");
     if (!form.phoneNumber.trim()) return alert("Please enter phone number.");
-    if (!form.club.trim()) return alert("Please enter club.");
-    if (form.password.length < 6) return alert("Password must be at least 6 characters.");
-    if (form.password !== form.confirmPassword) return alert("Passwords do not match.");
+    if (form.password.length < 6) {
+      return alert("Password must be at least 6 characters.");
+    }
+    if (form.password !== form.confirmPassword) {
+      return alert("Passwords do not match.");
+    }
+
+    let finalClub = clubChoice;
+
+    if (clubChoice === "__new__") {
+      if (!newClubName.trim()) {
+        return alert("Please enter new club name.");
+      }
+
+      finalClub = newClubName.trim();
+    }
+
+    if (!finalClub) {
+      return alert("Please select a club.");
+    }
 
     try {
       setLoading(true);
+
+      let clubId = null;
+
+      if (clubChoice === "__new__") {
+        const clubRef = await addDoc(collection(db, "clubs"), {
+          name: finalClub,
+          createdAt: serverTimestamp(),
+        });
+
+        clubId = clubRef.id;
+
+        setClubs((prev) =>
+          [...prev, { id: clubRef.id, name: finalClub }].sort((a, b) =>
+            a.name.localeCompare(b.name)
+          )
+        );
+      } else {
+        const selectedClub = clubs.find((club) => club.name === finalClub);
+        clubId = selectedClub?.id || null;
+      }
 
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -137,7 +194,8 @@ export default function App() {
         email: form.email.trim().toLowerCase(),
         phoneCode,
         phoneNumber: form.phoneNumber.trim(),
-        club: form.club.trim(),
+        club: finalClub,
+        clubId,
         role: "player",
         rating: 1000,
         wins: 0,
@@ -146,11 +204,33 @@ export default function App() {
         createdAt: serverTimestamp(),
       });
 
+      setForm({
+        fullName: "",
+        nationality: "",
+        email: "",
+        phoneNumber: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+      setPhoneCode("+47");
+      setClubChoice("");
+      setNewClubName("");
       setShowCreateAccount(false);
+
       alert("Account created successfully!");
     } catch (error) {
       console.error(error);
-      alert("Could not create account.");
+
+      if (error.code === "auth/email-already-in-use") {
+        alert("This email is already in use.");
+      } else if (error.code === "auth/invalid-email") {
+        alert("Invalid email.");
+      } else if (error.code === "auth/weak-password") {
+        alert("Password is too weak.");
+      } else {
+        alert("Could not create account.");
+      }
     } finally {
       setLoading(false);
     }
@@ -185,7 +265,6 @@ export default function App() {
     await signOut(auth);
   };
 
-  // Tournament logic
   const addTournamentPlayer = () => {
     const cleanName = playerName.trim();
 
@@ -511,6 +590,7 @@ export default function App() {
             <button
               className="closeButton"
               onClick={() => setShowCreateAccount(false)}
+              disabled={loading}
             >
               ×
             </button>
@@ -545,7 +625,10 @@ export default function App() {
               />
 
               <div className="phoneRow">
-                <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}>
+                <select
+                  value={phoneCode}
+                  onChange={(e) => setPhoneCode(e.target.value)}
+                >
                   {europeanCountries.map((item) => (
                     <option key={item.code} value={item.code}>
                       {item.country} {item.code}
@@ -575,12 +658,29 @@ export default function App() {
                 onChange={(e) => updateForm("confirmPassword", e.target.value)}
               />
 
-              <input
-                type="text"
-                placeholder="Club"
-                value={form.club}
-                onChange={(e) => updateForm("club", e.target.value)}
-              />
+              <select
+                value={clubChoice}
+                onChange={(e) => setClubChoice(e.target.value)}
+              >
+                <option value="">Select club</option>
+
+                {clubs.map((club) => (
+                  <option key={club.id} value={club.name}>
+                    {club.name}
+                  </option>
+                ))}
+
+                <option value="__new__">+ Add new club</option>
+              </select>
+
+              {clubChoice === "__new__" && (
+                <input
+                  type="text"
+                  placeholder="New club name"
+                  value={newClubName}
+                  onChange={(e) => setNewClubName(e.target.value)}
+                />
+              )}
 
               <button type="submit" className="submitButton" disabled={loading}>
                 {loading ? "Creating..." : "Create account"}
