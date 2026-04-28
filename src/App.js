@@ -42,7 +42,7 @@ export default function App() {
     <main className="page">
       <header className="topbar">
         <div className="logoContainer">
-          <img src="/logo.svg" alt="TheCueScore.com logo" className="logo" />
+          <img src="/TheCueRank.svg" alt="TheCueRank.com logo" className="logo" />
         </div>
 
         <div className="authButtons">
