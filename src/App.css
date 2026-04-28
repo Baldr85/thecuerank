@@ -266,3 +266,183 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 }
+.homeHero {
+  max-width: 1000px;
+  margin: 80px auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.homeHero h1 {
+  font-size: 44px;
+  margin-bottom: 12px;
+}
+
+.homeHero p {
+  font-size: 18px;
+  color: #555;
+}
+
+.dropdown button {
+  display: block;
+  width: 100%;
+  padding: 13px 16px;
+  color: black;
+  text-align: left;
+  background: white;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dropdown button:hover {
+  background: #f2f2f2;
+}
+
+.tournamentPage {
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.tournamentPage h1 {
+  text-align: center;
+}
+
+.tournamentPanel {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.tournamentPanel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border: 1px solid #ccc;
+  border-radius: 9px;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.addPlayerRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.addPlayerRow button,
+.tournamentActions button {
+  padding: 12px 18px;
+  border-radius: 9px;
+  border: none;
+  background: #111;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.playerList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.playerPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f1f1;
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.playerPill button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.tournamentActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bracketArea {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  padding-bottom: 20px;
+}
+
+.roundColumn {
+  min-width: 260px;
+}
+
+.matchCard {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+}
+
+.matchPlayers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.matchPlayers button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 9px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.matchPlayers button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.selectedWinner {
+  background: #111 !important;
+  color: white;
+}
+
+.winnerText {
+  margin-top: 10px;
+  font-weight: 800;
+  color: green;
+}
+
+.championBox {
+  margin-top: 30px;
+  background: #111;
+  color: white;
+  border-radius: 18px;
+  padding: 24px;
+  font-size: 24px;
+  font-weight: 900;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .addPlayerRow {
+    grid-template-columns: 1fr;
+  }
+
+  .homeHero h1 {
+    font-size: 32px;
+  }
+}
