@@ -446,3 +446,69 @@ body {
     font-size: 32px;
   }
 }
+
+.clubPage {
+  max-width: 1100px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.clubPage h1,
+.clubSubtitle {
+  text-align: center;
+}
+
+.clubSubtitle {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.adminBox,
+.memberTable {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 18px;
+  margin: 30px 0;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+}
+
+.adminBox {
+  padding: 24px;
+}
+
+.adminActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.adminActions button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #111;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.memberTable {
+  overflow: hidden;
+}
+
+.memberHeader,
+.memberRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.memberHeader {
+  font-weight: 800;
+  background: #f3f3f3;
+}
+
+.memberRow:last-child {
+  border-bottom: none;
+}

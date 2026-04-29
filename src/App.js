@@ -13,6 +13,8 @@ import {
   collection,
   getDocs,
   addDoc,
+  query,
+  where,
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import "./App.css";
@@ -65,6 +67,7 @@ export default function App() {
   const [clubs, setClubs] = useState([]);
   const [clubChoice, setClubChoice] = useState("");
   const [newClubName, setNewClubName] = useState("");
+  const [clubMembers, setClubMembers] = useState([]);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -119,6 +122,33 @@ export default function App() {
 
     loadClubs();
   }, []);
+
+const loadClubMembers = async () => {
+  if (!profile?.club) return;
+
+  const q = query(
+    collection(db, "users"),
+    where("club", "==", profile.club)
+  );
+
+  const snapshot = await getDocs(q);
+
+  const members = snapshot.docs.map((docSnap) => ({
+    id: docSnap.id,
+    ...docSnap.data(),
+  }));
+
+  members.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
+  setClubMembers(members);
+};
+
+useEffect(() => {
+  if (page === "club" && profile?.club) {
+    loadClubMembers();
+  }
+// eslint-disable-next-line
+}, [page, profile]);
 
   const updateForm = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -401,6 +431,7 @@ export default function App() {
           <div className="dropdown">
             <button onClick={() => goToPage("home")}>Home</button>
             <button onClick={() => goToPage("dashboard")}>Dashboard</button>
+	    <button onClick={() => goToPage("club")}>Club</button>
             <button onClick={() => goToPage("tournaments")}>Tournaments</button>
             <button onClick={() => goToPage("ranking")}>Ranking</button>
             <button onClick={() => goToPage("players")}>Players</button>
@@ -449,6 +480,75 @@ export default function App() {
         </section>
       )}
 
+{page === "club" && user && profile && (
+  <section className="clubPage">
+    <h1>{profile.club}</h1>
+    <p className="clubSubtitle">Club dashboard</p>
+
+    <div className="dashboardGrid">
+      <div className="dashboardCard">
+        <h3>Members</h3>
+        <p>{clubMembers.length}</p>
+      </div>
+
+      <div className="dashboardCard">
+        <h3>Your role</h3>
+        <p>{profile.role}</p>
+      </div>
+
+      <div className="dashboardCard">
+        <h3>Your rating</h3>
+        <p>{profile.rating}</p>
+      </div>
+
+      <div className="dashboardCard">
+        <h3>Country</h3>
+        <p>{profile.nationality}</p>
+      </div>
+    </div>
+
+    {profile.role === "admin" && (
+      <div className="adminBox">
+        <h2>Admin panel</h2>
+        <p>You are club admin for {profile.club}.</p>
+
+        <div className="adminActions">
+          <button>Create club tournament</button>
+          <button>Manage members</button>
+          <button>Edit club profile</button>
+        </div>
+      </div>
+    )}
+
+    <h2>Club members</h2>
+
+    <div className="memberTable">
+      <div className="memberHeader">
+        <span>Player</span>
+        <span>Rating</span>
+        <span>Wins</span>
+        <span>Losses</span>
+        <span>Role</span>
+      </div>
+
+      {clubMembers.map((member) => (
+        <div key={member.id} className="memberRow">
+          <span>{member.fullName}</span>
+          <span>{member.rating || 1000}</span>
+          <span>{member.wins || 0}</span>
+          <span>{member.losses || 0}</span>
+          <span>{member.role || "player"}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
+
+{page === "club" && !user && (
+  <section className="dashboard">
+    <h1>Please log in to view your club.</h1>
+  </section>
+)}
       {page === "tournaments" && (
         <section className="tournamentPage">
           <h1>Tournaments</h1>
