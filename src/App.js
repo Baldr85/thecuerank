@@ -15,6 +15,7 @@ import {
   addDoc,
   query,
   where,
+  updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import "./App.css";
@@ -384,12 +385,26 @@ useEffect(() => {
     setChampion("");
   };
 
-  const goToPage = (newPage) => {
-    setPage(newPage);
-    setMenuOpen(false);
-  };
+const goToPage = (newPage) => {
+  setPage(newPage);
+  setMenuOpen(false);
+};
 
-  return (
+const makeMemberAdmin = async (memberId) => {
+  if (profile?.role !== "admin") {
+    alert("Only admins can change member roles.");
+    return;
+  }
+
+  await updateDoc(doc(db, "users", memberId), {
+    role: "admin",
+  });
+
+  alert("Member is now admin.");
+  loadClubMembers();
+};
+
+return (
     <main className="page">
       <header className="topbar">
         <div className="logoContainer">
@@ -512,11 +527,15 @@ useEffect(() => {
         <h2>Admin panel</h2>
         <p>You are club admin for {profile.club}.</p>
 
-        <div className="adminActions">
-          <button>Create club tournament</button>
-          <button>Manage members</button>
-          <button>Edit club profile</button>
-        </div>
+      <div className="adminActions">
+  <button>Create club tournament</button>
+
+  <button onClick={() => goToPage("manageMembers")}>
+    Manage members
+  </button>
+
+  <button>Edit club profile</button>
+</div>
       </div>
     )}
 
@@ -538,6 +557,44 @@ useEffect(() => {
           <span>{member.wins || 0}</span>
           <span>{member.losses || 0}</span>
           <span>{member.role || "player"}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
+
+{page === "manageMembers" && user && profile?.role === "admin" && (
+  <section className="clubPage">
+    <h1>Manage Members</h1>
+    <p className="clubSubtitle">{profile.club}</p>
+
+    <div className="memberTable">
+      <div className="memberHeader">
+        <span>Player</span>
+        <span>Email</span>
+        <span>Rating</span>
+        <span>Role</span>
+        <span>Action</span>
+      </div>
+
+      {clubMembers.map((member) => (
+        <div key={member.id} className="memberRow">
+          <span>{member.fullName}</span>
+          <span>{member.email}</span>
+          <span>{member.rating || 1000}</span>
+          <span>{member.role || "player"}</span>
+          <span>
+            {(member.role || "player") === "admin" ? (
+              "Admin"
+            ) : (
+              <button
+                className="smallActionButton"
+                onClick={() => makeMemberAdmin(member.id)}
+              >
+                Make admin
+              </button>
+            )}
+          </span>
         </div>
       ))}
     </div>

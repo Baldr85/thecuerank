@@ -512,3 +512,13 @@ body {
 .memberRow:last-child {
   border-bottom: none;
 }
+
+.smallActionButton {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #111;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
