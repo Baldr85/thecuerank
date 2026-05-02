@@ -89,6 +89,7 @@ export default function App() {
   const [tournamentPlayers, setTournamentPlayers] = useState([]);
   const [rounds, setRounds] = useState([]);
   const [champion, setChampion] = useState("");
+  const [byeHistory, setByeHistory] = useState([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -124,32 +125,27 @@ export default function App() {
     loadClubs();
   }, []);
 
-const loadClubMembers = async () => {
-  if (!profile?.club) return;
+  const loadClubMembers = async () => {
+    if (!profile?.club) return;
 
-  const q = query(
-    collection(db, "users"),
-    where("club", "==", profile.club)
-  );
+    const q = query(collection(db, "users"), where("club", "==", profile.club));
+    const snapshot = await getDocs(q);
 
-  const snapshot = await getDocs(q);
+    const members = snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
 
-  const members = snapshot.docs.map((docSnap) => ({
-    id: docSnap.id,
-    ...docSnap.data(),
-  }));
+    members.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    setClubMembers(members);
+  };
 
-  members.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-
-  setClubMembers(members);
-};
-
-useEffect(() => {
-  if (page === "club" && profile?.club) {
-    loadClubMembers();
-  }
-// eslint-disable-next-line
-}, [page, profile]);
+  useEffect(() => {
+    if ((page === "club" || page === "manageMembers") && profile?.club) {
+      loadClubMembers();
+    }
+    // eslint-disable-next-line
+  }, [page, profile]);
 
   const updateForm = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -313,10 +309,19 @@ useEffect(() => {
     setTournamentPlayers(tournamentPlayers.filter((p) => p !== name));
   };
 
-  const makeRound = (players) => {
-    const list = [...players];
+  const makeRound = (players, currentByeHistory = []) => {
+    let list = [...players];
+    let newByePlayer = null;
 
     if (list.length % 2 !== 0) {
+      const playerWithoutBye = list.find(
+        (player) => !currentByeHistory.includes(player)
+      );
+
+      newByePlayer = playerWithoutBye || list[list.length - 1];
+
+      list = list.filter((player) => player !== newByePlayer);
+      list.push(newByePlayer);
       list.push("BYE");
     }
 
@@ -330,10 +335,14 @@ useEffect(() => {
         p1,
         p2,
         winner: p2 === "BYE" ? p1 : "",
+        byePlayer: p2 === "BYE" ? p1 : null,
       });
     }
 
-    return newRound;
+    return {
+      round: newRound,
+      byePlayer: newByePlayer,
+    };
   };
 
   const startTournament = () => {
@@ -342,9 +351,10 @@ useEffect(() => {
       return;
     }
 
-    const firstRound = makeRound(tournamentPlayers);
+    const result = makeRound(tournamentPlayers, []);
 
-    setRounds([firstRound]);
+    setRounds([result.round]);
+    setByeHistory(result.byePlayer ? [result.byePlayer] : []);
     setChampion("");
   };
 
@@ -373,8 +383,13 @@ useEffect(() => {
       return;
     }
 
-    const newRound = makeRound(winners);
-    setRounds([...rounds, newRound]);
+    const result = makeRound(winners, byeHistory);
+
+    setRounds([...rounds, result.round]);
+
+    if (result.byePlayer) {
+      setByeHistory([...byeHistory, result.byePlayer]);
+    }
   };
 
   const resetTournament = () => {
@@ -383,28 +398,29 @@ useEffect(() => {
     setTournamentPlayers([]);
     setRounds([]);
     setChampion("");
+    setByeHistory([]);
   };
 
-const goToPage = (newPage) => {
-  setPage(newPage);
-  setMenuOpen(false);
-};
+  const goToPage = (newPage) => {
+    setPage(newPage);
+    setMenuOpen(false);
+  };
 
-const makeMemberAdmin = async (memberId) => {
-  if (profile?.role !== "admin") {
-    alert("Only admins can change member roles.");
-    return;
-  }
+  const makeMemberAdmin = async (memberId) => {
+    if (profile?.role !== "admin") {
+      alert("Only admins can change member roles.");
+      return;
+    }
 
-  await updateDoc(doc(db, "users", memberId), {
-    role: "admin",
-  });
+    await updateDoc(doc(db, "users", memberId), {
+      role: "admin",
+    });
 
-  alert("Member is now admin.");
-  loadClubMembers();
-};
+    alert("Member is now admin.");
+    loadClubMembers();
+  };
 
-return (
+  return (
     <main className="page">
       <header className="topbar">
         <div className="logoContainer">
@@ -446,7 +462,7 @@ return (
           <div className="dropdown">
             <button onClick={() => goToPage("home")}>Home</button>
             <button onClick={() => goToPage("dashboard")}>Dashboard</button>
-	    <button onClick={() => goToPage("club")}>Club</button>
+            <button onClick={() => goToPage("club")}>Club</button>
             <button onClick={() => goToPage("tournaments")}>Tournaments</button>
             <button onClick={() => goToPage("ranking")}>Ranking</button>
             <button onClick={() => goToPage("players")}>Players</button>
@@ -495,117 +511,118 @@ return (
         </section>
       )}
 
-{page === "club" && user && profile && (
-  <section className="clubPage">
-    <h1>{profile.club}</h1>
-    <p className="clubSubtitle">Club dashboard</p>
+      {page === "club" && user && profile && (
+        <section className="clubPage">
+          <h1>{profile.club}</h1>
+          <p className="clubSubtitle">Club dashboard</p>
 
-    <div className="dashboardGrid">
-      <div className="dashboardCard">
-        <h3>Members</h3>
-        <p>{clubMembers.length}</p>
-      </div>
+          <div className="dashboardGrid">
+            <div className="dashboardCard">
+              <h3>Members</h3>
+              <p>{clubMembers.length}</p>
+            </div>
 
-      <div className="dashboardCard">
-        <h3>Your role</h3>
-        <p>{profile.role}</p>
-      </div>
+            <div className="dashboardCard">
+              <h3>Your role</h3>
+              <p>{profile.role}</p>
+            </div>
 
-      <div className="dashboardCard">
-        <h3>Your rating</h3>
-        <p>{profile.rating}</p>
-      </div>
+            <div className="dashboardCard">
+              <h3>Your rating</h3>
+              <p>{profile.rating}</p>
+            </div>
 
-      <div className="dashboardCard">
-        <h3>Country</h3>
-        <p>{profile.nationality}</p>
-      </div>
-    </div>
+            <div className="dashboardCard">
+              <h3>Country</h3>
+              <p>{profile.nationality}</p>
+            </div>
+          </div>
 
-    {profile.role === "admin" && (
-      <div className="adminBox">
-        <h2>Admin panel</h2>
-        <p>You are club admin for {profile.club}.</p>
+          {profile.role === "admin" && (
+            <div className="adminBox">
+              <h2>Admin panel</h2>
+              <p>You are club admin for {profile.club}.</p>
 
-      <div className="adminActions">
-  <button>Create club tournament</button>
+              <div className="adminActions">
+                <button>Create club tournament</button>
 
-  <button onClick={() => goToPage("manageMembers")}>
-    Manage members
-  </button>
+                <button onClick={() => goToPage("manageMembers")}>
+                  Manage members
+                </button>
 
-  <button>Edit club profile</button>
-</div>
-      </div>
-    )}
+                <button>Edit club profile</button>
+              </div>
+            </div>
+          )}
 
-    <h2>Club members</h2>
+          <h2>Club members</h2>
 
-    <div className="memberTable">
-      <div className="memberHeader">
-        <span>Player</span>
-        <span>Rating</span>
-        <span>Wins</span>
-        <span>Losses</span>
-        <span>Role</span>
-      </div>
+          <div className="memberTable">
+            <div className="memberHeader">
+              <span>Player</span>
+              <span>Rating</span>
+              <span>Wins</span>
+              <span>Losses</span>
+              <span>Role</span>
+            </div>
 
-      {clubMembers.map((member) => (
-        <div key={member.id} className="memberRow">
-          <span>{member.fullName}</span>
-          <span>{member.rating || 1000}</span>
-          <span>{member.wins || 0}</span>
-          <span>{member.losses || 0}</span>
-          <span>{member.role || "player"}</span>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
+            {clubMembers.map((member) => (
+              <div key={member.id} className="memberRow">
+                <span>{member.fullName}</span>
+                <span>{member.rating || 1000}</span>
+                <span>{member.wins || 0}</span>
+                <span>{member.losses || 0}</span>
+                <span>{member.role || "player"}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
-{page === "manageMembers" && user && profile?.role === "admin" && (
-  <section className="clubPage">
-    <h1>Manage Members</h1>
-    <p className="clubSubtitle">{profile.club}</p>
+      {page === "manageMembers" && user && profile?.role === "admin" && (
+        <section className="clubPage">
+          <h1>Manage Members</h1>
+          <p className="clubSubtitle">{profile.club}</p>
 
-    <div className="memberTable">
-      <div className="memberHeader">
-        <span>Player</span>
-        <span>Email</span>
-        <span>Rating</span>
-        <span>Role</span>
-        <span>Action</span>
-      </div>
+          <div className="memberTable">
+            <div className="memberHeader">
+              <span>Player</span>
+              <span>Email</span>
+              <span>Rating</span>
+              <span>Role</span>
+              <span>Action</span>
+            </div>
 
-      {clubMembers.map((member) => (
-        <div key={member.id} className="memberRow">
-          <span>{member.fullName}</span>
-          <span>{member.email}</span>
-          <span>{member.rating || 1000}</span>
-          <span>{member.role || "player"}</span>
-          <span>
-            {(member.role || "player") === "admin" ? (
-              "Admin"
-            ) : (
-              <button
-                className="smallActionButton"
-                onClick={() => makeMemberAdmin(member.id)}
-              >
-                Make admin
-              </button>
-            )}
-          </span>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
+            {clubMembers.map((member) => (
+              <div key={member.id} className="memberRow">
+                <span>{member.fullName}</span>
+                <span>{member.email}</span>
+                <span>{member.rating || 1000}</span>
+                <span>{member.role || "player"}</span>
+                <span>
+                  {(member.role || "player") === "admin" ? (
+                    "Admin"
+                  ) : (
+                    <button
+                      className="smallActionButton"
+                      onClick={() => makeMemberAdmin(member.id)}
+                    >
+                      Make admin
+                    </button>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
-{page === "club" && !user && (
-  <section className="dashboard">
-    <h1>Please log in to view your club.</h1>
-  </section>
-)}
+      {page === "club" && !user && (
+        <section className="dashboard">
+          <h1>Please log in to view your club.</h1>
+        </section>
+      )}
+
       {page === "tournaments" && (
         <section className="tournamentPage">
           <h1>Tournaments</h1>
@@ -632,16 +649,17 @@ return (
               {tournamentPlayers.map((player) => (
                 <div key={player} className="playerPill">
                   {player}
-                  <button onClick={() => removeTournamentPlayer(player)}>
-                    ×
-                  </button>
+                  <button onClick={() => removeTournamentPlayer(player)}>×</button>
                 </div>
               ))}
             </div>
 
             <div className="tournamentActions">
               <button onClick={startTournament}>Start Winner Tournament</button>
-              <button onClick={nextRound} disabled={rounds.length === 0 || champion}>
+              <button
+                onClick={nextRound}
+                disabled={rounds.length === 0 || champion}
+              >
                 Next round
               </button>
               <button onClick={resetTournament}>Reset</button>
@@ -662,7 +680,9 @@ return (
                         onClick={() =>
                           pickMatchWinner(roundIndex, matchIndex, match.p1)
                         }
-                        className={match.winner === match.p1 ? "selectedWinner" : ""}
+                        className={
+                          match.winner === match.p1 ? "selectedWinner" : ""
+                        }
                       >
                         {match.p1}
                       </button>
@@ -674,7 +694,9 @@ return (
                           pickMatchWinner(roundIndex, matchIndex, match.p2)
                         }
                         disabled={match.p2 === "BYE"}
-                        className={match.winner === match.p2 ? "selectedWinner" : ""}
+                        className={
+                          match.winner === match.p2 ? "selectedWinner" : ""
+                        }
                       >
                         {match.p2}
                       </button>
