@@ -53,11 +53,13 @@ const europeanCountries = [
 ];
 
 const gameTypes = [
-  { id: "8ball", name: "8-Ball", targetLabel: "Race to", target: 5 },
-  { id: "9ball", name: "9-Ball", targetLabel: "Race to", target: 7 },
-  { id: "10ball", name: "10-Ball", targetLabel: "Race to", target: 6 },
-  { id: "snooker", name: "Snooker", targetLabel: "Best of frames", target: 5 },
+  { id: "8ball", name: "8-Ball" },
+  { id: "9ball", name: "9-Ball" },
+  { id: "10ball", name: "10-Ball" },
+  { id: "snooker", name: "Snooker" },
 ];
+
+const raceOptions = [1, 2, 3, 5, 7, 9, 11];
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -97,7 +99,9 @@ export default function App() {
   const [rounds, setRounds] = useState([]);
   const [champion, setChampion] = useState("");
   const [byeHistory, setByeHistory] = useState([]);
+
   const [selectedGame, setSelectedGame] = useState("8ball");
+  const [selectedRace, setSelectedRace] = useState(3);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -170,17 +174,26 @@ export default function App() {
     if (!form.nationality) return alert("Please select nationality.");
     if (!form.email.trim()) return alert("Please enter email.");
     if (!form.phoneNumber.trim()) return alert("Please enter phone number.");
-    if (form.password.length < 6) return alert("Password must be at least 6 characters.");
-    if (form.password !== form.confirmPassword) return alert("Passwords do not match.");
+    if (form.password.length < 6) {
+      return alert("Password must be at least 6 characters.");
+    }
+    if (form.password !== form.confirmPassword) {
+      return alert("Passwords do not match.");
+    }
 
     let finalClub = clubChoice;
 
     if (clubChoice === "__new__") {
-      if (!newClubName.trim()) return alert("Please enter new club name.");
+      if (!newClubName.trim()) {
+        return alert("Please enter new club name.");
+      }
+
       finalClub = newClubName.trim();
     }
 
-    if (!finalClub) return alert("Please select a club.");
+    if (!finalClub) {
+      return alert("Please select a club.");
+    }
 
     try {
       setLoading(true);
@@ -271,7 +284,11 @@ export default function App() {
     try {
       setLoading(true);
 
-      await signInWithEmailAndPassword(auth, loginForm.email, loginForm.password);
+      await signInWithEmailAndPassword(
+        auth,
+        loginForm.email,
+        loginForm.password
+      );
 
       setShowLogin(false);
       setLoginForm({ email: "", password: "" });
@@ -295,6 +312,7 @@ export default function App() {
     const cleanName = playerName.trim();
 
     if (!cleanName) return;
+
     if (tournamentPlayers.includes(cleanName)) {
       alert("Player already added.");
       return;
@@ -337,8 +355,8 @@ export default function App() {
         winner: p2 === "BYE" ? p1 : "",
         byePlayer: p2 === "BYE" ? p1 : null,
         gameType: currentGame.name,
-        targetLabel: currentGame.targetLabel,
-        target: currentGame.target,
+        targetLabel: `Best of ${selectedRace}`,
+        target: Math.ceil(selectedRace / 2),
         score: {
           p1: 0,
           p2: 0,
@@ -434,6 +452,7 @@ export default function App() {
     setChampion("");
     setByeHistory([]);
     setSelectedGame("8ball");
+    setSelectedRace(3);
   };
 
   const goToPage = (newPage) => {
@@ -667,7 +686,18 @@ export default function App() {
             >
               {gameTypes.map((game) => (
                 <option key={game.id} value={game.id}>
-                  {game.name} — {game.targetLabel} {game.target}
+                  {game.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedRace}
+              onChange={(e) => setSelectedRace(Number(e.target.value))}
+            >
+              {raceOptions.map((race) => (
+                <option key={race} value={race}>
+                  Best of {race}
                 </option>
               ))}
             </select>
@@ -693,7 +723,9 @@ export default function App() {
               {tournamentPlayers.map((player) => (
                 <div key={player} className="playerPill">
                   {player}
-                  <button onClick={() => removeTournamentPlayer(player)}>×</button>
+                  <button onClick={() => removeTournamentPlayer(player)}>
+                    ×
+                  </button>
                 </div>
               ))}
             </div>
@@ -719,8 +751,9 @@ export default function App() {
 
                 {round.map((match, matchIndex) => (
                   <div key={matchIndex} className="matchCard">
-                    <div className="matchFormat">
-                      {match.gameType} · {match.targetLabel} {match.target}
+                    <div className="matchTopRow">
+                      <div className="matchFormat">{match.gameType}</div>
+                      <div className="raceColumn">{match.targetLabel}</div>
                     </div>
 
                     <div className="matchPlayers">
