@@ -52,6 +52,13 @@ const europeanCountries = [
   { country: "Lithuania", code: "+370" },
 ];
 
+const gameTypes = [
+  { id: "8ball", name: "8-Ball", targetLabel: "Race to", target: 5 },
+  { id: "9ball", name: "9-Ball", targetLabel: "Race to", target: 7 },
+  { id: "10ball", name: "10-Ball", targetLabel: "Race to", target: 6 },
+  { id: "snooker", name: "Snooker", targetLabel: "Best of frames", target: 5 },
+];
+
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [page, setPage] = useState("home");
@@ -90,6 +97,7 @@ export default function App() {
   const [rounds, setRounds] = useState([]);
   const [champion, setChampion] = useState("");
   const [byeHistory, setByeHistory] = useState([]);
+  const [selectedGame, setSelectedGame] = useState("8ball");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -162,26 +170,17 @@ export default function App() {
     if (!form.nationality) return alert("Please select nationality.");
     if (!form.email.trim()) return alert("Please enter email.");
     if (!form.phoneNumber.trim()) return alert("Please enter phone number.");
-    if (form.password.length < 6) {
-      return alert("Password must be at least 6 characters.");
-    }
-    if (form.password !== form.confirmPassword) {
-      return alert("Passwords do not match.");
-    }
+    if (form.password.length < 6) return alert("Password must be at least 6 characters.");
+    if (form.password !== form.confirmPassword) return alert("Passwords do not match.");
 
     let finalClub = clubChoice;
 
     if (clubChoice === "__new__") {
-      if (!newClubName.trim()) {
-        return alert("Please enter new club name.");
-      }
-
+      if (!newClubName.trim()) return alert("Please enter new club name.");
       finalClub = newClubName.trim();
     }
 
-    if (!finalClub) {
-      return alert("Please select a club.");
-    }
+    if (!finalClub) return alert("Please select a club.");
 
     try {
       setLoading(true);
@@ -272,11 +271,7 @@ export default function App() {
     try {
       setLoading(true);
 
-      await signInWithEmailAndPassword(
-        auth,
-        loginForm.email,
-        loginForm.password
-      );
+      await signInWithEmailAndPassword(auth, loginForm.email, loginForm.password);
 
       setShowLogin(false);
       setLoginForm({ email: "", password: "" });
@@ -290,6 +285,10 @@ export default function App() {
 
   const handleLogout = async () => {
     await signOut(auth);
+  };
+
+  const getCurrentGame = () => {
+    return gameTypes.find((game) => game.id === selectedGame) || gameTypes[0];
   };
 
   const addTournamentPlayer = () => {
@@ -312,6 +311,7 @@ export default function App() {
   const makeRound = (players, currentByeHistory = []) => {
     let list = [...players];
     let newByePlayer = null;
+    const currentGame = getCurrentGame();
 
     if (list.length % 2 !== 0) {
       const playerWithoutBye = list.find(
@@ -336,6 +336,13 @@ export default function App() {
         p2,
         winner: p2 === "BYE" ? p1 : "",
         byePlayer: p2 === "BYE" ? p1 : null,
+        gameType: currentGame.name,
+        targetLabel: currentGame.targetLabel,
+        target: currentGame.target,
+        score: {
+          p1: 0,
+          p2: 0,
+        },
       });
     }
 
@@ -361,8 +368,35 @@ export default function App() {
   const pickMatchWinner = (roundIndex, matchIndex, player) => {
     if (player === "BYE") return;
 
-    const copy = rounds.map((round) => round.map((match) => ({ ...match })));
+    const copy = rounds.map((round) =>
+      round.map((match) => ({
+        ...match,
+        score: { ...(match.score || { p1: 0, p2: 0 }) },
+      }))
+    );
+
     copy[roundIndex][matchIndex].winner = player;
+    setRounds(copy);
+  };
+
+  const updateScore = (roundIndex, matchIndex, playerKey) => {
+    const copy = rounds.map((round) =>
+      round.map((match) => ({
+        ...match,
+        score: { ...(match.score || { p1: 0, p2: 0 }) },
+      }))
+    );
+
+    const match = copy[roundIndex][matchIndex];
+
+    if (match.winner || match.p2 === "BYE") return;
+
+    match.score[playerKey] += 1;
+
+    if (match.score[playerKey] >= match.target) {
+      match.winner = playerKey === "p1" ? match.p1 : match.p2;
+    }
+
     setRounds(copy);
   };
 
@@ -399,6 +433,7 @@ export default function App() {
     setRounds([]);
     setChampion("");
     setByeHistory([]);
+    setSelectedGame("8ball");
   };
 
   const goToPage = (newPage) => {
@@ -545,11 +580,9 @@ export default function App() {
 
               <div className="adminActions">
                 <button>Create club tournament</button>
-
                 <button onClick={() => goToPage("manageMembers")}>
                   Manage members
                 </button>
-
                 <button>Edit club profile</button>
               </div>
             </div>
@@ -628,6 +661,17 @@ export default function App() {
           <h1>Tournaments</h1>
 
           <div className="tournamentPanel">
+            <select
+              value={selectedGame}
+              onChange={(e) => setSelectedGame(e.target.value)}
+            >
+              {gameTypes.map((game) => (
+                <option key={game.id} value={game.id}>
+                  {game.name} — {game.targetLabel} {game.target}
+                </option>
+              ))}
+            </select>
+
             <input
               type="text"
               placeholder="Tournament name"
@@ -675,6 +719,10 @@ export default function App() {
 
                 {round.map((match, matchIndex) => (
                   <div key={matchIndex} className="matchCard">
+                    <div className="matchFormat">
+                      {match.gameType} · {match.targetLabel} {match.target}
+                    </div>
+
                     <div className="matchPlayers">
                       <button
                         onClick={() =>
@@ -701,6 +749,30 @@ export default function App() {
                         {match.p2}
                       </button>
                     </div>
+
+                    {match.p2 !== "BYE" && (
+                      <div className="scoreBox">
+                        <button
+                          onClick={() =>
+                            updateScore(roundIndex, matchIndex, "p1")
+                          }
+                        >
+                          + {match.p1}
+                        </button>
+
+                        <strong>
+                          {match.score?.p1 || 0} - {match.score?.p2 || 0}
+                        </strong>
+
+                        <button
+                          onClick={() =>
+                            updateScore(roundIndex, matchIndex, "p2")
+                          }
+                        >
+                          + {match.p2}
+                        </button>
+                      </div>
+                    )}
 
                     {match.winner && (
                       <div className="winnerText">Winner: {match.winner}</div>

@@ -61,14 +61,21 @@ body {
   z-index: 10;
 }
 
+.dropdown button,
 .dropdown a {
   display: block;
+  width: 100%;
   padding: 13px 16px;
   color: black;
+  text-align: left;
+  background: white;
+  border: none;
   text-decoration: none;
   font-weight: 500;
+  cursor: pointer;
 }
 
+.dropdown button:hover,
 .dropdown a:hover {
   background: #f2f2f2;
 }
@@ -101,6 +108,267 @@ body {
   border: none;
   background: #111;
   color: white;
+}
+
+.homeHero {
+  max-width: 1000px;
+  margin: 80px auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.homeHero h1 {
+  font-size: 44px;
+  margin-bottom: 12px;
+}
+
+.homeHero p {
+  font-size: 18px;
+  color: #555;
+}
+
+.dashboard,
+.clubPage,
+.tournamentPage {
+  max-width: 1100px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.dashboard h1,
+.clubPage h1,
+.tournamentPage h1,
+.clubSubtitle {
+  text-align: center;
+}
+
+.clubSubtitle {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.dashboardCard {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+}
+
+.dashboardCard h3 {
+  margin: 0 0 10px;
+  color: #666;
+}
+
+.dashboardCard p {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.adminBox,
+.memberTable,
+.tournamentPanel {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 18px;
+  margin: 30px 0;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+}
+
+.adminBox,
+.tournamentPanel {
+  padding: 24px;
+}
+
+.adminActions,
+.tournamentActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.adminActions button,
+.tournamentActions button,
+.addPlayerRow button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #111;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.memberTable {
+  overflow: hidden;
+}
+
+.memberHeader,
+.memberRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.memberHeader {
+  font-weight: 800;
+  background: #f3f3f3;
+}
+
+.memberRow:last-child {
+  border-bottom: none;
+}
+
+.smallActionButton {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #111;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tournamentPanel input,
+.tournamentPanel select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border: 1px solid #ccc;
+  border-radius: 9px;
+  font-size: 15px;
+  margin-bottom: 12px;
+  background: white;
+}
+
+.addPlayerRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.playerList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.playerPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f1f1;
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.playerPill button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.bracketArea {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  padding-bottom: 20px;
+}
+
+.roundColumn {
+  min-width: 280px;
+}
+
+.matchCard {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+}
+
+.matchPlayers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.matchPlayers button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 9px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.matchPlayers button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.selectedWinner {
+  background: #111 !important;
+  color: white;
+}
+
+.scoreBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.scoreBox button {
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: #111;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scoreBox strong {
+  font-size: 18px;
+}
+
+.matchFormat {
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #666;
+  font-weight: 700;
+}
+
+.winnerText {
+  margin-top: 10px;
+  font-weight: 800;
+  color: green;
+}
+
+.championBox {
+  margin-top: 30px;
+  background: #111;
+  color: white;
+  border-radius: 18px;
+  padding: 24px;
+  font-size: 24px;
+  font-weight: 900;
+  text-align: center;
 }
 
 .modalOverlay {
@@ -173,7 +441,6 @@ body {
   cursor: pointer;
 }
 
-/* MOBILE */
 @media (max-width: 768px) {
   .topbar {
     flex-direction: column;
@@ -215,310 +482,25 @@ body {
     min-width: 140px;
   }
 
-  .modal {
-    max-width: 100%;
-    padding: 24px;
-  }
-
-  .phoneRow {
-    grid-template-columns: 1fr;
-  }
-}
-.dashboard {
-  max-width: 1000px;
-  margin: 60px auto;
-  padding: 0 20px;
-}
-
-.dashboard h1 {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.dashboardGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-}
-
-.dashboardCard {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 16px;
-  padding: 24px;
-  text-align: center;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
-}
-
-.dashboardCard h3 {
-  margin: 0 0 10px;
-  color: #666;
-}
-
-.dashboardCard p {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-}
-
-@media (max-width: 768px) {
   .dashboardGrid {
     grid-template-columns: 1fr 1fr;
   }
-}
-.homeHero {
-  max-width: 1000px;
-  margin: 80px auto;
-  padding: 0 20px;
-  text-align: center;
-}
 
-.homeHero h1 {
-  font-size: 44px;
-  margin-bottom: 12px;
-}
+  .memberHeader,
+  .memberRow {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
 
-.homeHero p {
-  font-size: 18px;
-  color: #555;
-}
-
-.dropdown button {
-  display: block;
-  width: 100%;
-  padding: 13px 16px;
-  color: black;
-  text-align: left;
-  background: white;
-  border: none;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.dropdown button:hover {
-  background: #f2f2f2;
-}
-
-.tournamentPage {
-  max-width: 1200px;
-  margin: 60px auto;
-  padding: 0 20px;
-}
-
-.tournamentPage h1 {
-  text-align: center;
-}
-
-.tournamentPanel {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 18px;
-  padding: 22px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
-  margin-bottom: 30px;
-}
-
-.tournamentPanel input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 13px 14px;
-  border: 1px solid #ccc;
-  border-radius: 9px;
-  font-size: 15px;
-  margin-bottom: 12px;
-}
-
-.addPlayerRow {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-}
-
-.addPlayerRow button,
-.tournamentActions button {
-  padding: 12px 18px;
-  border-radius: 9px;
-  border: none;
-  background: #111;
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.playerList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 12px 0;
-}
-
-.playerPill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f1f1f1;
-  border-radius: 999px;
-  padding: 8px 12px;
-}
-
-.playerPill button {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-weight: 900;
-}
-
-.tournamentActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.bracketArea {
-  display: flex;
-  gap: 22px;
-  overflow-x: auto;
-  padding-bottom: 20px;
-}
-
-.roundColumn {
-  min-width: 260px;
-}
-
-.matchCard {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
-}
-
-.matchPlayers {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.matchPlayers button {
-  flex: 1;
-  padding: 10px;
-  border-radius: 9px;
-  border: 1px solid #ccc;
-  background: white;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.matchPlayers button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.selectedWinner {
-  background: #111 !important;
-  color: white;
-}
-
-.winnerText {
-  margin-top: 10px;
-  font-weight: 800;
-  color: green;
-}
-
-.championBox {
-  margin-top: 30px;
-  background: #111;
-  color: white;
-  border-radius: 18px;
-  padding: 24px;
-  font-size: 24px;
-  font-weight: 900;
-  text-align: center;
-}
-
-@media (max-width: 768px) {
   .addPlayerRow {
+    grid-template-columns: 1fr;
+  }
+
+  .phoneRow {
     grid-template-columns: 1fr;
   }
 
   .homeHero h1 {
     font-size: 32px;
   }
-}
-
-.clubPage {
-  max-width: 1100px;
-  margin: 60px auto;
-  padding: 0 20px;
-}
-
-.clubPage h1,
-.clubSubtitle {
-  text-align: center;
-}
-
-.clubSubtitle {
-  color: #666;
-  margin-bottom: 30px;
-}
-
-.adminBox,
-.memberTable {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 18px;
-  margin: 30px 0;
-  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
-}
-
-.adminBox {
-  padding: 24px;
-}
-
-.adminActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.adminActions button {
-  padding: 12px 18px;
-  border: none;
-  border-radius: 9px;
-  background: #111;
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.memberTable {
-  overflow: hidden;
-}
-
-.memberHeader,
-.memberRow {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-  padding: 14px 16px;
-  border-bottom: 1px solid #eee;
-}
-
-.memberHeader {
-  font-weight: 800;
-  background: #f3f3f3;
-}
-
-.memberRow:last-child {
-  border-bottom: none;
-}
-
-.smallActionButton {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  background: #111;
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
 }
