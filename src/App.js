@@ -99,9 +99,9 @@ export default function App() {
   const [rounds, setRounds] = useState([]);
   const [champion, setChampion] = useState("");
   const [byeHistory, setByeHistory] = useState([]);
-
   const [selectedGame, setSelectedGame] = useState("8ball");
   const [selectedRace, setSelectedRace] = useState(3);
+  const [currentTournamentId, setCurrentTournamentId] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -308,6 +308,15 @@ export default function App() {
     return gameTypes.find((game) => game.id === selectedGame) || gameTypes[0];
   };
 
+  const saveTournamentUpdate = async (updatedData) => {
+    if (!currentTournamentId) return;
+
+    await updateDoc(doc(db, "tournaments", currentTournamentId), {
+      ...updatedData,
+      updatedAt: serverTimestamp(),
+    });
+  };
+
   const addTournamentPlayer = () => {
     const cleanName = playerName.trim();
 
@@ -355,7 +364,9 @@ export default function App() {
         winner: p2 === "BYE" ? p1 : "",
         byePlayer: p2 === "BYE" ? p1 : null,
         gameType: currentGame.name,
+        gameId: selectedGame,
         targetLabel: `Best of ${selectedRace}`,
+        bestOf: selectedRace,
         target: Math.ceil(selectedRace / 2),
         score: {
           p1: 0,
@@ -370,20 +381,51 @@ export default function App() {
     };
   };
 
-  const startTournament = () => {
+  const startTournament = async () => {
+    if (!user || !profile) {
+      alert("Please log in before creating a tournament.");
+      return;
+    }
+
     if (tournamentPlayers.length < 2) {
       alert("Add at least 2 players.");
       return;
     }
 
-    const result = makeRound(tournamentPlayers, []);
+    if (!tournamentName.trim()) {
+      alert("Please enter tournament name.");
+      return;
+    }
 
+    const result = makeRound(tournamentPlayers, []);
+    const currentGame = getCurrentGame();
+    const newByeHistory = result.byePlayer ? [result.byePlayer] : [];
+
+    const tournamentRef = await addDoc(collection(db, "tournaments"), {
+      name: tournamentName.trim(),
+      club: profile.club,
+      clubId: profile.clubId || null,
+      gameType: currentGame.name,
+      gameId: selectedGame,
+      bestOf: selectedRace,
+      target: Math.ceil(selectedRace / 2),
+      players: tournamentPlayers,
+      rounds: [result.round],
+      champion: "",
+      byeHistory: newByeHistory,
+      createdBy: user.uid,
+      createdByName: profile.fullName,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    setCurrentTournamentId(tournamentRef.id);
     setRounds([result.round]);
-    setByeHistory(result.byePlayer ? [result.byePlayer] : []);
+    setByeHistory(newByeHistory);
     setChampion("");
   };
 
-  const pickMatchWinner = (roundIndex, matchIndex, player) => {
+  const pickMatchWinner = async (roundIndex, matchIndex, player) => {
     if (player === "BYE") return;
 
     const copy = rounds.map((round) =>
@@ -395,9 +437,13 @@ export default function App() {
 
     copy[roundIndex][matchIndex].winner = player;
     setRounds(copy);
+
+    await saveTournamentUpdate({
+      rounds: copy,
+    });
   };
 
-  const updateScore = (roundIndex, matchIndex, playerKey) => {
+  const updateScore = async (roundIndex, matchIndex, playerKey) => {
     const copy = rounds.map((round) =>
       round.map((match) => ({
         ...match,
@@ -416,9 +462,13 @@ export default function App() {
     }
 
     setRounds(copy);
+
+    await saveTournamentUpdate({
+      rounds: copy,
+    });
   };
 
-  const nextRound = () => {
+  const nextRound = async () => {
     if (rounds.length === 0) return;
 
     const currentRound = rounds[rounds.length - 1];
@@ -432,16 +482,28 @@ export default function App() {
 
     if (winners.length === 1) {
       setChampion(winners[0]);
+
+      await saveTournamentUpdate({
+        champion: winners[0],
+      });
+
       return;
     }
 
     const result = makeRound(winners, byeHistory);
 
-    setRounds([...rounds, result.round]);
+    const updatedRounds = [...rounds, result.round];
+    const updatedByeHistory = result.byePlayer
+      ? [...byeHistory, result.byePlayer]
+      : byeHistory;
 
-    if (result.byePlayer) {
-      setByeHistory([...byeHistory, result.byePlayer]);
-    }
+    setRounds(updatedRounds);
+    setByeHistory(updatedByeHistory);
+
+    await saveTournamentUpdate({
+      rounds: updatedRounds,
+      byeHistory: updatedByeHistory,
+    });
   };
 
   const resetTournament = () => {
@@ -453,6 +515,7 @@ export default function App() {
     setByeHistory([]);
     setSelectedGame("8ball");
     setSelectedRace(3);
+    setCurrentTournamentId(null);
   };
 
   const goToPage = (newPage) => {
